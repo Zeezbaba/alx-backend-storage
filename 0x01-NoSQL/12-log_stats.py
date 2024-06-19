@@ -22,5 +22,6 @@ def count_nginx_logs(mongo_collection):
 
 
 if __name__ == "__main__":
-    mongo_collection = MongoClient('mongodb://127.0.0.1:27017').logs.nginx
-    count_nginx_logs(mongo_collection)
+    client = MongoClient('mongodb://127.0.0.1:27017')
+    db = client.logs
+    count_nginx_logs(db.nginx)
