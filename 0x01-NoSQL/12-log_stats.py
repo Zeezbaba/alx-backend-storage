@@ -8,7 +8,8 @@ from pymongo import MongoClient
 
 def count_nginx_logs(mongo_collection):
     """provide stats about Nginx logs stored in MongoDB"""
-    print('{} logs'.format(mongo_collection.count_documents({})))
+    total_logs = mongo_collection.count_documents({})
+    print(f"{total_logs} logs")
 
     print("Methods:")
     for method in ["GET", "POST", "PUT", "PATCH", "DELETE"]:
