@@ -31,11 +31,13 @@ def track_access_count(method):
         return html_content
     return wrapper
 
+
 @track_access_count
 def get_page(url: str) -> str:
     """Fetch the HTML content of a particular URL"""
     response = requests.get(url)
     return response.text
+
 
 if __name__ == "__main__":
     get_page('http://slowwly.robertomurray.co.uk')
