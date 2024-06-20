@@ -5,40 +5,44 @@ HTML content of a particular URL and returns it.
 
 import redis
 import requests
+from typing import Callable
 from functools import wraps
 
+# Initialize Redis client
 r = redis.Redis()
 
 
-def url_access_count(method):
-    """Decorator for get_page function"""
+def track_access_count(method: Callable) -> Callable:
+    """Decorator to track the number of times a URL is accessed."""
     @wraps(method)
-    def wrapper(url):
-        """Wrapper function"""
-        key = "cached:" + url
-        cached_value = r.get(key)
-        if cached_value:
-            return cached_value.decode("utf-8")
-
-        # Get new content and update cache
-        key_count = "count:" + url
-        html_content = method(url)
-
-        r.incr(key_count)
-        r.setex(key, 10, html_content)
-        return html_content
+    def wrapper(url: str, *args, **kwargs):
+        count_key = f"count:{url}"
+        r.incr(count_key)
+        return method(url, *args, **kwargs)
     return wrapper
 
 
-@url_access_count
+def cache_result(method: Callable) -> Callable:
+    """Decorator to cache the result of a URL fetch for 10 seconds."""
+    @wraps(method)
+    def wrapper(url: str, *args, **kwargs):
+        cache_key = f"cache:{url}"
+        cached_result = r.get(cache_key)
+        if cached_result:
+            return cached_result.decode('utf-8')
+
+        result = method(url, *args, **kwargs)
+        r.setex(cache_key, 10, result)
+        return result
+    return wrapper
+
+
+@track_access_count
+@cache_result
 def get_page(url: str) -> str:
-    """Obtain the HTML content of a particular URL"""
-    try:
-        results = requests.get(url)
-        results.raise_for_status()  # Raise an HTTPError for bad responses
-        return results.text
-    except requests.RequestException as e:
-        return f"Error: {e}"
+    """Fetch the HTML content of a particular URL."""
+    response = requests.get(url)
+    return response.text
 
 
 if __name__ == "__main__":
