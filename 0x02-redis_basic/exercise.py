@@ -45,21 +45,40 @@ def call_history(method: Callable) -> Callable:
     return wrapper
 
 
-def replay(method: Callable) -> Callable:
-    """function to display the history of
-    calls of a particular function.
+# def replay(method: Callable) -> Callable:
+#     """function to display the history of
+#     calls of a particular function.
+#     """
+#     key = method.__qualname__
+
+#     input_key = f"{key}:inputs"
+#     output_key = f"{key}:outputs"
+
+#     inputs = method.__self__._redis.lrange(input_key, 0, 1)
+#     outputs = method.__self__._redis.lrange(output_key, 0, 1)
+
+#     print(f"{key} was called {len(inputs)} times:")
+#     for input_args, output in zip(inputs, outputs):
+#         print(f"{key}(*{input_args.decode('utf-8')}) -> {output.decode('utf-8')}")
+
+def replay(method: Callable) -> None:
     """
-    key = method.__qualname__
+    Display the history of calls of a particular function.
+    """
+    redis_client = redis.Redis()
+    method_name = method.__qualname__
 
-    input_key = f"{key}:inputs"
-    output_key = f"{key}:outputs"
+    # Get number of times method was called
+    count = redis_client.get(method_name)
+    count_display = int(count) if count else 0
+    print(f"{method_name} was called {count_display} times:")
 
-    inputs = method.__self__._redis.lrange(input_key, 0, 1)
-    outputs = method.__self__._redis.lrange(output_key, 0, 1)
+    # Get inputs and outputs
+    inputs = redis_client.lrange(f"{method_name}:inputs", 0, -1)
+    outputs = redis_client.lrange(f"{method_name}:outputs", 0, -1)
 
-    print(f"{key} was called {len(inputs)} times:")
-    for input_args, output in zip(inputs, outputs):
-        print(f"{key}(*{input_args.decode('utf-8')}) -> {output.decode('utf-8')}")
+    for input_data, output_data in zip(inputs, outputs):
+        print(f"{method_name}(*{input_data.decode('utf-8')}) -> {output_data.decode('utf-8')}")
 
 
 class Cache:
