@@ -61,19 +61,20 @@ def call_history(method: Callable) -> Callable:
 #     for input_args, output in zip(inputs, outputs):
 #         print(f"{key}(*{input_args.decode('utf-8')}) -> {output.decode('utf-8')}")
 
+from typing import Callable
+
 def replay(method: Callable) -> None:
     """
-    Display the history of calls of a particular function.
+    Display the history of calls of a particular function by accessing
+    its stored input/output history in Redis.
     """
-    redis_client = redis.Redis()
+    redis_client = method.__self__._redis  # <-- use the correct Redis instance
     method_name = method.__qualname__
 
-    # Get number of times method was called
     count = redis_client.get(method_name)
     count_display = int(count) if count else 0
     print(f"{method_name} was called {count_display} times:")
 
-    # Get inputs and outputs
     inputs = redis_client.lrange(f"{method_name}:inputs", 0, -1)
     outputs = redis_client.lrange(f"{method_name}:outputs", 0, -1)
 
