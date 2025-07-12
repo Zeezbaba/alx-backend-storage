@@ -59,10 +59,12 @@ def replay(method: Callable) -> Callable:
 
     print(f"{key} was called {len(inputs)} times:")
     for input_args, output in zip(inputs, outputs):
-        print(f"{key}(*{input_args.decode('utf-8) -> {output.decode('utf-8")
+        print(f"{key}(*{input_args.decode('utf-8')}) -> {output.decode('utf-8')}")
 
 
 class Cache:
+    """Cache class to interact with Redis storage."""
+
     def __init__(self):
         """store an instance of redis client"""
         self._redis = redis.Redis()
